@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import axios from 'axios';
-import { format } from 'date-fns';
 import {makeStyles} from '@material-ui/core/styles';
 import {Table, TableContainer, TableHead, TableCell, TableBody, TableRow, Modal, Button, TextField} from '@material-ui/core';
 import {Edit, Delete} from '@material-ui/icons';
 
 const baseUrl='http://localhost:3000/'
 
+//Estilos CSS
 const useStyles = makeStyles((theme) => ({
   modal: {
     position: 'absolute',
@@ -29,7 +29,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function App() {
-const styles= useStyles();
+  //States de la aplicacion 
+  const styles= useStyles();
   const [data, setData]=useState([]);
   const [modalInsertar, setModalInsertar]=useState(false);
   const [modalEditar, setModalEditar]=useState(false);
@@ -42,7 +43,7 @@ const styles= useStyles();
     cantidad: 0,
     descripcion: ''
   })
-
+  //Cambio en los input
   const handleChange=e=>{
     const {name, value}=e.target;
     setConsolaSeleccionada(prevState=>({
@@ -52,7 +53,7 @@ const styles= useStyles();
     console.log(consolaSeleccionada);
   }
 
-
+  //Peticion de carga de los productos
   const peticionGet=async()=>{
     await axios.get(`${baseUrl}productos`)
     .then(response=>{
@@ -60,16 +61,19 @@ const styles= useStyles();
     })
   }
 
+  //Peticion para crear los propductos 
   const peticionPost=async()=>{
     await axios.post(baseUrl+"productos/", consolaSeleccionada)
     .then(response=>{
       setData(data.concat(response.data))
+      console.log(response.data)
       abrirCerrarModalInsertar()
       setRecargar(true)
     })
     setRecargar(false)
   }
 
+  //Peticion para editar los prodcutos
   const peticionPut=async()=>{
     await axios.put(baseUrl+"productos/"+consolaSeleccionada.id, consolaSeleccionada)
     .then(response=>{
@@ -77,7 +81,7 @@ const styles= useStyles();
       dataNueva.forEach(consola=>{
         if(consolaSeleccionada.id===consola.id){
           consola.nombre=consolaSeleccionada.nombre;
-          consola.fechaElab=format(new Date(consolaSeleccionada.fechaElab), 'dd/MM/yyyy');
+          consola.fechaElab=consolaSeleccionada.fechaElab;
           consola.fechaCad=consolaSeleccionada.fechaCad;
           consola.cantidad=consolaSeleccionada.cantidad;
           consola.descripcion=consolaSeleccionada.descripcion;
@@ -88,8 +92,10 @@ const styles= useStyles();
       setRecargar(true)
     })
     setRecargar(false)
+    setConsolaSeleccionada({})
   }
 
+  //Peticion para borrar los productos
   const peticionDelete=async()=>{
     await axios.delete(baseUrl+"productos/"+consolaSeleccionada.id)
     .then(response=>{
@@ -98,6 +104,7 @@ const styles= useStyles();
     })
   }
 
+  //Funciones para abrir y cerrar los modales de la aplicacion 
   const abrirCerrarModalInsertar=()=>{
     setModalInsertar(!modalInsertar);
   }
@@ -115,13 +122,15 @@ const styles= useStyles();
     (caso==='Editar')?abrirCerrarModalEditar():abrirCerrarModalEliminar()
   }
 
+  //Funcion para actualizar los productos 
   useEffect(()=>{
     peticionGet();
   },[recargar])
 
+  //Cuerpo del formulario para insertar los productos
   const bodyInsertar=(
     <div className={styles.modal}>
-      <h3>Agregar Nueva Consola</h3>
+      <h3>Agregar Nuevo Producto</h3>
       <TextField name="nombre" className={styles.inputMaterial} label="Nombre" onChange={handleChange}/>
       <br />
       <label>Fecha de Elaboracion</label>
@@ -141,24 +150,21 @@ const styles= useStyles();
     </div>
   )
 
+  //Cuerpo del formulario para editar los productos 
   const bodyEditar=(
     <div className={styles.modal}>
-      <h3>Editar Consola</h3>
+      <h3>Editar Producto</h3>
       <TextField name="nombre" className={styles.inputMaterial} label="Nombre" onChange={handleChange} value={consolaSeleccionada && consolaSeleccionada.nombre}/>
       <br />
       <label>Fecha de Elaboracion</label><br />
-      <label>{consolaSeleccionada.fechaElab}</label>
-      <TextField name="fechaElab" type='date' className={styles.inputMaterial}  onChange={handleChange} value={consolaSeleccionada.fechaElab} InputLabelProps={{
-          shrink: true,
-        }}/>
+      <TextField name="fechaElab" type='date' className={styles.inputMaterial}  onChange={handleChange} value={consolaSeleccionada && consolaSeleccionada.fechaElab}/>
       <br />
       <label>Fecha de Caducidad</label><br />
-      <label>{consolaSeleccionada.fechaCad}</label>
       <TextField name="fechaCad" type='date' className={styles.inputMaterial}  onChange={handleChange} value={consolaSeleccionada && consolaSeleccionada.fechaCad}/>
       <br />
       <TextField name="cantidad" className={styles.inputMaterial} label="Cantidad" onChange={handleChange} value={consolaSeleccionada && consolaSeleccionada.cantidad}/>
       <br />
-      <TextField type='date' name="descripcion" className={styles.inputMaterial}  onChange={handleChange} value={consolaSeleccionada && consolaSeleccionada.descripcion}/>
+      <TextField  name="descripcion" className={styles.inputMaterial} label="Descripcion" onChange={handleChange} value={consolaSeleccionada && consolaSeleccionada.descripcion}/>
       <br /><br />
       <div align="right">
         <Button color="primary" onClick={()=>peticionPut()}>Editar</Button>
@@ -167,9 +173,10 @@ const styles= useStyles();
     </div>
   )
 
+  //Cuerpo para eliminar los productos
   const bodyEliminar=(
     <div className={styles.modal}>
-      <p>Estás seguro que deseas eliminar la consola <b>{consolaSeleccionada && consolaSeleccionada.nombre}</b> ? </p>
+      <p>Estás seguro que deseas eliminar el producto <b>{consolaSeleccionada && consolaSeleccionada.nombre}</b> ? </p>
       <div align="right">
         <Button color="secondary" onClick={()=>peticionDelete()} >Sí</Button>
         <Button onClick={()=>abrirCerrarModalEliminar()}>No</Button>
@@ -180,11 +187,12 @@ const styles= useStyles();
   )
     console.log(data)
 
+  //Cuerpo delo listado de los productos
   return (
     <div className="App">
       <br />
     <Button onClick={()=>abrirCerrarModalInsertar()}>Insertar</Button>
-      <br /><br />
+      <h1>Productos</h1>
      <TableContainer>
        <Table>
          <TableHead>
